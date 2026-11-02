@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bingo del liceo</title>
+<style>
+:root{--fondo:#0f172a;--panel:#1e293b;--vacio:#334155;--tvacio:#94a3b8;--salido:#facc15;--tsalido:#111827;--ultimo:#ef4444;--ink:#f1f5f9;--mute:#94a3b8;--line:#334155;--btn:#facc15;--btntxt:#111827;--ok:#4ade80;--err:#f87171;--warn:#fbbf24;
+--B:#2563eb;--I:#7c3aed;--N:#6b7280;--G:#16a34a;--O:#ea580c;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--fondo:#f1f5f9;--panel:#fff;--vacio:#e2e8f0;--tvacio:#64748b;--ink:#0f172a;--mute:#475569;--line:#cbd5e1;--btn:#0f172a;--btntxt:#fff;--ok:#15803d;--err:#b91c1c;--warn:#b45309;--ultimo:#dc2626}}
+body.screen{--fondo:#0f172a;--panel:#1e293b;--vacio:#334155;--tvacio:#94a3b8;--ink:#f1f5f9;--mute:#94a3b8;--ultimo:#ef4444}
+*{box-sizing:border-box}
+html,body{height:100%}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--fondo);color:var(--ink);font:16px/1.4 Arial,Helvetica,sans-serif}
+button,.lnk{font:inherit;font-weight:700;border:2px solid var(--btn);background:var(--btn);color:var(--btntxt);border-radius:10px;padding:12px 16px;cursor:pointer;text-decoration:none;text-align:center}
+button.sec,.lnk{background:transparent;color:var(--ink);border-color:var(--line)}
+button:focus-visible,.lnk:focus-visible,input:focus-visible{outline:3px solid var(--salido);outline-offset:2px}
+button:disabled{opacity:.4;cursor:default}
+/* control */
+#ctl{max-width:560px;margin:0 auto;padding:18px;text-align:center}
+#ctl h1{font-size:1.5rem;margin:6px 0 14px}
+#ctl label.q{display:block;font-weight:700;font-size:1.1rem;margin-bottom:8px}
+#entrada{width:170px;font:700 2.6rem Arial,sans-serif;text-align:center;padding:8px;border-radius:12px;border:2px solid var(--line);background:var(--panel);color:var(--ink)}
+#estado{min-height:3em;margin:12px 0;font-weight:700}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#cuenta{margin-top:16px;font-weight:700}
+#lista{margin-top:6px;color:var(--mute);text-align:left;word-wrap:break-word}
+/* pantalla */
+#scr{display:none;height:100%;padding:10px;grid-template-rows:5fr 4fr;gap:10px;min-height:0}
+body.screen #ctl{display:none}
+body.screen #scr{display:grid}
+.sup{display:grid;grid-template-columns:3fr 2fr;gap:10px;min-height:0}
+#num{background:var(--panel);color:var(--ultimo);display:flex;align-items:center;justify-content:center;font-weight:700;border-radius:10px;font-size:min(32vh,19vw);white-space:nowrap}
+.der{display:grid;grid-template-rows:2fr auto 2fr;gap:6px;min-height:0}
+#pal{background:var(--panel);border-radius:10px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;font-size:min(6vh,4.2vw);padding:8px}
+.ttl{text-align:center;color:var(--tvacio);font-weight:700;font-size:min(3vh,2.4vw)}
+#hist{display:flex;align-items:center;justify-content:center;color:var(--salido);font-weight:700;font-size:min(7vh,5vw)}
+.tab{display:grid;grid-template-rows:repeat(5,1fr);gap:4px;min-height:0}
+.fila{display:grid;grid-template-columns:repeat(16,1fr);gap:4px;min-height:0}
+.fila div{display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--vacio);color:var(--tvacio);font-weight:700;font-size:min(3.2vh,2.2vw);min-width:0}
+.fila div.L{color:#fff;font-size:min(4.4vh,3vw)}
+.fila div.s{background:var(--salido);color:var(--tsalido)}
+.fila div.u{background:var(--ultimo);color:#fff}
+#barra{position:fixed;right:10px;top:calc(10px + env(safe-area-inset-top,0px));display:flex;gap:6px;opacity:.55}
+#barra:hover,#barra:focus-within{opacity:1}
+#barra button,#barra a{padding:6px 10px;font-size:.8rem;background:var(--panel);color:var(--ink);border-color:var(--line)}
+@media(max-width:600px){.sup{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<main id="ctl">
+  <h1>Bingo del liceo: control</h1>
+  <label class="q" for="entrada">Número que salió:</label>
+  <input id="entrada" type="text" inputmode="text" autocomplete="off" maxlength="4" autofocus>
+  <div id="estado" role="status" aria-live="polite">Escribe el número (47 o N47) y presiona Enter</div>
+  <div class="grid">
+    <button id="agregar">Agregar</button>
+    <button id="deshacer" class="sec">Deshacer último</button>
+    <button id="azar" class="sec">Sacar al azar</button>
+    <button id="full" class="sec">Pantalla completa</button>
+    <a id="mostrar" class="lnk" href="#pantalla" target="_blank" rel="noopener">Mostrar pantalla</a>
+    <button id="reiniciar" class="sec">Reiniciar bingo</button>
+  </div>
+  <div id="cuenta"></div>
+  <div id="lista"></div>
+</main>
+
+<section id="scr" aria-label="Pantalla pública del bingo">
+  <div class="sup">
+    <div id="num" aria-live="polite">--</div>
+    <div class="der">
+      <div id="pal"></div>
+      <div class="ttl">ANTERIORES</div>
+      <div id="hist"></div>
+    </div>
+  </div>
+  <div class="tab" id="tab"></div>
+  <div id="barra">
+    <button id="full2">Pantalla completa</button>
+    <a class="lnk" href="#control">Control</a>
+  </div>
+</section>
+
+<script>
+(function(){
+  var LETRAS="BINGO", POR=15, MAX=75, ULTIMOS=1, KEY="bingo-liceo-estado";
+  var UN=["cero","uno","dos","tres","cuatro","cinco","seis","siete","ocho","nueve","diez","once","doce","trece","catorce","quince","dieciséis","diecisiete","dieciocho","diecinueve","veinte","veintiuno","veintidós","veintitrés","veinticuatro","veinticinco","veintiséis","veintisiete","veintiocho","veintinueve"];
+  var DEC={30:"treinta",40:"cuarenta",50:"cincuenta",60:"sesenta",70:"setenta",80:"ochenta",90:"noventa"};
+  var llamados=[], $=function(i){return document.getElementById(i)};
+  var bc=null; try{bc=new BroadcastChannel("bingo-liceo")}catch(e){}
+
+  function palabras(n){ if(n<30) return UN[n]; var d=Math.floor(n/10)*10,u=n%10; return DEC[d]+(u?" y "+UN[u]:""); }
+  function letra(n){ return LETRAS[Math.floor((n-1)/POR)]; }
+  function etq(n,s){ return letra(n)+(s||"")+n; }
+
+  function cargar(){ try{var s=localStorage.getItem(KEY); if(s){var a=JSON.parse(s); if(Array.isArray(a)) llamados=a.filter(function(n){return n>=1&&n<=MAX})}}catch(e){} }
+  function guardar(){ try{localStorage.setItem(KEY,JSON.stringify(llamados))}catch(e){} try{if(bc)bc.postMessage(llamados)}catch(e){} }
+
+  function msg(t,c){ var e=$("estado"); e.textContent=t; e.style.color=c?"var(--"+c+")":"var(--mute)"; }
+
+  // tablero de la pantalla
+  var celdas={};
+  (function(){
+    var tab=$("tab");
+    for(var r=0;r<5;r++){
+      var f=document.createElement("div"); f.className="fila";
+      var L=document.createElement("div"); L.className="L"; L.textContent=LETRAS[r]; L.style.background="var(--"+LETRAS[r]+")"; f.appendChild(L);
+      for(var c=0;c<POR;c++){ var n=r*POR+c+1, d=document.createElement("div"); d.textContent=n; f.appendChild(d); celdas[n]=d; }
+      tab.appendChild(f);
+    }
+  })();
+
+  function refrescar(){
+    for(var n=1;n<=MAX;n++) celdas[n].className="";
+    llamados.forEach(function(n){celdas[n].className="s"});
+    if(llamados.length){
+      var u=llamados[llamados.length-1]; celdas[u].className="u";
+      $("num").textContent=etq(u," "); $("pal").textContent=palabras(u);
+      $("hist").textContent=llamados.slice(Math.max(0,llamados.length-1-ULTIMOS),-1).reverse().map(function(x){return etq(x)}).join("   ");
+    }else{ $("num").textContent="--"; $("pal").textContent=""; $("hist").textContent=""; }
+    $("cuenta").textContent="Números salidos: "+llamados.length+" de "+MAX;
+    $("lista").textContent="Orden: "+(llamados.map(function(n){return etq(n)}).join(", ")||"—");
+    $("deshacer").disabled=!llamados.length;
+  }
+  function cambio(){ guardar(); refrescar(); $("entrada").focus(); }
+
+  function agregar(){
+    var t=$("entrada").value.trim().toUpperCase().replace(/\s/g,""); $("entrada").value="";
+    var l=null; if(t&&LETRAS.indexOf(t[0])>-1){ l=t[0]; t=t.slice(1); }
+    if(!/^\d+$/.test(t)){ msg("Escribe solo un número (ej. 47 o N47).","err"); return; }
+    var n=parseInt(t,10);
+    if(n<1||n>MAX){ msg("El número debe estar entre 1 y "+MAX+".","err"); return; }
+    if(l&&l!==letra(n)){ msg("El "+n+" pertenece a la letra "+letra(n)+", no a "+l+".","err"); return; }
+    if(llamados.indexOf(n)>-1){ msg("El "+etq(n)+" ya salió.","err"); return; }
+    llamados.push(n); msg("Agregado: "+etq(n)+" ("+palabras(n)+")","ok"); cambio();
+  }
+  function deshacer(){ if(llamados.length){ var n=llamados.pop(); msg("Se quitó el "+etq(n)+".","warn"); cambio(); } }
+  function azar(){
+    var r=[]; for(var n=1;n<=MAX;n++) if(llamados.indexOf(n)<0) r.push(n);
+    if(!r.length){ msg("Ya salieron todos los números.","err"); return; }
+    var n=r[Math.floor(Math.random()*r.length)]; llamados.push(n);
+    msg("Salió: "+etq(n)+" ("+palabras(n)+")","ok"); cambio();
+  }
+  var armado=false, tm=null;
+  function reiniciar(){
+    var b=$("reiniciar");
+    if(!armado){ armado=true; b.textContent="¿Borrar todo? Toca otra vez"; tm=setTimeout(function(){armado=false;b.textContent="Reiniciar bingo"},3000); return; }
+    clearTimeout(tm); armado=false; b.textContent="Reiniciar bingo";
+    llamados=[]; msg("Bingo reiniciado."); cambio();
+  }
+  function completa(){ try{ if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); }catch(e){} }
+  function modo(){ document.body.classList.toggle("screen",location.hash==="#pantalla"); }
+
+  cargar(); modo(); refrescar(); msg("Escribe el número (47 o N47) y presiona Enter");
+  $("agregar").onclick=agregar; $("deshacer").onclick=deshacer; $("azar").onclick=azar; $("reiniciar").onclick=reiniciar;
+  $("full").onclick=completa; $("full2").onclick=completa;
+  $("entrada").addEventListener("keydown",function(e){ if(e.key==="Enter") agregar(); });
+  window.addEventListener("hashchange",modo);
+  window.addEventListener("storage",function(e){ if(e.key===KEY){ cargar(); refrescar(); } });
+  if(bc) bc.onmessage=function(e){ if(Array.isArray(e.data)){ llamados=e.data; refrescar(); } };
+})();
+</script>
+</body>
+</html>
